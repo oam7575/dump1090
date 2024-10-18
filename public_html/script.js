@@ -371,6 +371,9 @@ function initialize() {
         $("#aircraft_ident_filter_form").submit(onFilterByAircraftIdent);
         $("#aircraft_ident_filter_reset_button").click(onResetAircraftIdentFilter);
 
+        $("#distance_alert_beep_form").submit(onFilterByDistanceAlertBeep);
+        $("#distance_alert_beep_reset_button").click(onResetDistanceAlertBeep);
+
         $('#settingsCog').on('click', function() {
         	$('#settings_infoblock').toggle();
         });
@@ -1723,6 +1726,12 @@ function removeHighlight() {
 function refreshTableInfo() {
         var show_squawk_warning = false;
 
+        // Get alert distance
+        var distanceAlert = $("#distance_alert_beep").val().trim()
+        if (distanceAlert === "") {
+            distanceAlert = undefined
+        }
+
         TrackedAircraft = 0
         TrackedAircraftPositions = 0
         TrackedHistorySize = 0
@@ -1797,6 +1806,10 @@ function refreshTableInfo() {
                         tableplane.tr.cells[18].innerHTML = getFlightAwareModeSLink(tableplane.icao, tableplane.flight);
                         tableplane.tr.cells[19].innerHTML = getFlightAwarePhotoLink(tableplane.registration);
                         tableplane.tr.className = classes;
+
+                        if (Number(format_distance_brief(tableplane.sitedist, DisplayUnits)) < (Number(distanceAlert))) {
+                                distanceBeep();
+                        }
                 }
         }
 
@@ -2391,6 +2404,49 @@ function onResetAircraftIdentFilter(e) {
         refreshTableInfo();
 }
 
+// Main Alert Distance beep function
+function distanceBeep2() {
+        try {
+                const audioCtx = new AudioContext();
+                const oscillator = audioCtx.createOscillator();
+
+                //oscillator.type = "sine";
+                oscillator.type = "sawtooth";
+                oscillator.frequency.setValueAtTime(330, audioCtx.currentTime);
+                oscillator.connect(audioCtx.destination);
+                oscillator.start();
+                setTimeout(
+                        function() {
+                                oscillator.stop();
+                        },
+                275);
+        } catch (error) {
+                console.error("Error in distanceBeep - script.js: ", error);
+        }
+}
+
+// Call this distanceBeep function
+// insert additional calls to distanceBeep2();
+// if you want the beep to occur multiple times
+function distanceBeep() {
+        distanceBeep2();
+}
+
+
+
+
+function onFilterByDistanceAlertBeep(e) {
+        e.preventDefault();
+        updatePlaneFilter();
+        refreshTableInfo();
+}
+
+function onResetDistanceAlertBeep(e) {
+        $("#distance_alert_beep").val("");
+        updatePlaneFilter();
+        refreshTableInfo();
+}
+
 function filterGroundVehicles(switchFilter) {
 	if (typeof localStorage['groundVehicleFilter'] === 'undefined') {
 		localStorage.setItem('groundVehicleFilter' , 'not_filtered');
@@ -2493,16 +2549,24 @@ function updatePlaneFilter() {
         aircraftIdent = undefined
     }
 
+    // Get alert distance
+    var distanceAlert = $("#distance_alert_beep").val().trim()
+    if (distanceAlert === "") {
+        distanceAlert = undefined
+    }
+
     PlaneFilter.aircraftTypeCode = aircraftTypeCode;
     PlaneFilter.aircraftIdent = aircraftIdent;
+    PlaneFilter.distanceAlert = distanceAlert;
 
     var altitudeFilterSet = (PlaneFilter.minAltitude == DefaultMinMaxFilters[DisplayUnits].min && PlaneFilter.maxAltitude == DefaultMinMaxFilters[DisplayUnits].maxAltitude) ? 0 : 1;
     var speedFilterSet = (PlaneFilter.minSpeedFilter == DefaultMinMaxFilters[DisplayUnits].min && PlaneFilter.maxSpeedFilter == DefaultMinMaxFilters[DisplayUnits].maxSpeed) ? 0 : 1;
     var distanceFilterSet = (PlaneFilter.minDistanceFilter == DefaultMinMaxFilters[DisplayUnits].min && PlaneFilter.maxDistanceFilter == DefaultMinMaxFilters[DisplayUnits].maxDistance) ? 0 : 1;
     var aircraftTypeFilterSet = (PlaneFilter.aircraftTypeCode == undefined) ? 0 : 1;
     var aircraftIdentFilterSet = (PlaneFilter.aircraftIdent == undefined) ? 0 : 1;
+    var distanceAlertSet = (PlaneFilter.distanceAlert == undefined) ? 0 : 1;
 
-    ActiveFilterCount = altitudeFilterSet + speedFilterSet + distanceFilterSet + aircraftTypeFilterSet + aircraftIdentFilterSet;
+    ActiveFilterCount = altitudeFilterSet + speedFilterSet + distanceFilterSet + aircraftTypeFilterSet + aircraftIdentFilterSet + distanceAlertSet;
 
     var filter = document.getElementById('filter_button');
     filter.style.backgroundColor = (ActiveFilterCount > 0) ? "Lime" : "#FEBC11";

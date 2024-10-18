@@ -111,8 +111,10 @@ function PlaneObject(icao) {
                 if (this.selected) {
                         refreshSelected();
                 }
+
         }.bind(this));
 }
+
 
 PlaneObject.prototype.isFiltered = function() {
     // aircraft type filter
@@ -128,6 +130,14 @@ PlaneObject.prototype.isFiltered = function() {
                 return true;
         }
     }
+
+    // distance alert filter
+    if (this.filter.distanceAlert) {
+        var warndistance = document.getElementById('distance_alert_beep')
+        if (this.sitedist < Number(warndistance)) {
+                return true;
+        }
+     }
 
     var dataSource = this.getDataSource();
     if (dataSource === 'uat') {

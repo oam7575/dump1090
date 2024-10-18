@@ -929,6 +929,7 @@ select.error, textarea.error, input.error {
     background: #00A0E2 !important;
 }
 
+#distance_alert_beep_form,
 #aircraft_type_filter_form,
 #aircraft_ident_filter_form {
     position: relative;
