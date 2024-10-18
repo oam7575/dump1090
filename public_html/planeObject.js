@@ -139,6 +139,14 @@ PlaneObject.prototype.isFiltered = function() {
         }
      }
 
+    // altitude alert filter
+    if (this.filter.altitudeAlert) {
+        var warnaltitude = document.getElementById('altitude_alert_beep')
+        if (this.nav_altitude < Number(warnaltitude)) {
+                return true;
+        }
+     }
+
     var dataSource = this.getDataSource();
     if (dataSource === 'uat') {
         if (!this.filter.UAT) return true;
